@@ -1,0 +1,4 @@
+.env
+courselist.json
+data.csv
+*.db
