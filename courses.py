@@ -1,11 +1,9 @@
-from dataclasses import dataclass
 import csv
 from dotenv import dotenv_values
 from databases import Database
 import discord
 from discord.ext import commands
 import asyncio
-from functools import lru_cache
 from cache import AsyncLRU
 import json
 
@@ -16,7 +14,7 @@ database = Database("sqlite:///{0}".format(config['DATABASE']))
 
 
 
-command_prefix = '$'
+command_prefix = '$coursebot '
 bot = commands.Bot(command_prefix=command_prefix)
 list_channel = None
 server = None
@@ -216,7 +214,7 @@ async def delete_all_yespleaseactually(ctx):
 
 
 
-@bot.command()
+# @bot.command()
 async def debug_test(ctx):
 	await setup_channel('asdf 1234', 'Test Course')
 	await ctx.send('OK!')
