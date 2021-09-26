@@ -141,20 +141,33 @@ async def add_db_class(course_number, message_id, channel_id, role_id, course_na
 			'channel_id': channel_id, 'role_id': role_id, 'course_name': course_name}
 	await database.execute(query=query, values=values)
 
+numnew = 0
+async def assign_category(channel):
+	global numnew
+	first = server.get_channel(int(config['CLASSES_CATEGORY_ID']))
+	assert first is not None
+	if len(first.text_channels) >= 50:
+		numnew += 1
+		new = await server.create_category(f'Classes {numnew}')
+		first = new
+		config['CLASSES_CATEGORY_ID'] = new.id
+
+	await channel.move(category=first, end=True)
+
+
 async def setup_channel(course_number, course_name):
 	short_num = channel_title_san(course_number)
 
 	existing = await get_info_by_number(course_number.upper())
 	if existing is not None:
-		raise ValueError(f'Entry for {course_number} already exists')
+		# print(f'Entry for {course_number} already exists')
+		return True
 	
 
 	msg = await list_channel.send(content=f'{course_number.upper()} - {course_name}')
 	channel = await server.create_text_channel(short_num)
 
-	category=bot.get_channel(int(config['CLASSES_CATEGORY_ID']))
-	assert category is not None
-	await channel.move(category=category, end=True)
+	await assign_category(channel)
 	role = await server.create_role(name=short_num)
 
 	await msg.add_reaction(re_emoji)
@@ -178,14 +191,17 @@ async def load_courses():
 	with open('courselist.json', 'r') as f:
 		courses = json.load(f)['courses']
 		i = 0
+
 		for course in courses:
 			print(f'loading {i}/{len(courses)} ({course["num"]})    ', end='\r')
 			try:
-				await setup_channel(course['num'], course['name'])
-			except:
+				set_up_previously = await setup_channel(course['num'], course['name'])
+			except Exception as e:
+				raise e
 				print(f'\nfailed to set up {course["num"]}')
 
-			await asyncio.sleep(1.5)
+			if not set_up_previously:
+				await asyncio.sleep(1.5)
 			i += 1
 		print('done!')
 	
